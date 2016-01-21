@@ -1,0 +1,23 @@
+{
+  "name": "jsonresume-desktop",
+  "version": "0.0.1",
+  "description": "JSONResume editor",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js"
+  },
+  "author": "T. Scott Barnes <scott@awesomebarnes.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "electron-prebuilt": "^0.36.4"
+  },
+  "dependencies": {
+    "backbone": "^1.2.3",
+    "bootstrap": "^3.3.6",
+    "font-awesome": "^4.5.0",
+    "handlebars": "^4.0.5",
+    "jquery": "^2.2.0",
+    "jquery-ui": "^1.10.5",
+    "lodash": "^4.0.0"
+  }
+}
