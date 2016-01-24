@@ -1,8 +1,14 @@
+var remote = require("remote");
+var BrowserWindow = remote.BrowserWindow;
+var dialog = remote.dialog;
+var fs = require('fs');
+
 // Global by intention.
 var builder;
 
 jQuery(document).ready(function($) {
 	var form = $("#form");
+	var currentFile = null;
 	builder = new Builder(form);
 
 	$.getJSON("json/schema.json", function(data) {
@@ -29,7 +35,7 @@ jQuery(document).ready(function($) {
 	function postResume(data) {
 		var theme = "flat";
 		var hash = window.location.hash;
-		if (hash != "") {
+		if (hash !== "") {
 			theme = hash.replace("#", "");
 		}
 		$.ajax({
@@ -52,9 +58,43 @@ jQuery(document).ready(function($) {
 	enableTSEplugin();
 	enableCSStransitions();
 
+	$("#import").on("click", function() {
+		var properties = ['openFile'],
+		parentWindow = (process.platform == 'darwin') ? null : BrowserWindow.getFocusedWindow();
+
+		dialog.showOpenDialog(parentWindow, {
+			filters: [{
+				name: 'JSON',
+				extensions: ['json']
+			}]
+		}, function(filename) {
+			if(filename === undefined) return;
+			console.log("got a file: " + filename[0]);
+			$.getJSON(filename[0], function(data) {
+				builder.setFormValues(data);
+			});
+		});
+	});
+	$("#import").tooltip({
+		container: "body"
+	});
+
 	$("#export").on("click", function() {
 		var data = form.data("resume");
-		download(JSON.stringify(data, null, "  "), "resume.json", "text/plain");
+		// download(JSON.stringify(data, null, "  "), "resume.json", "text/plain");
+		var properties = ['createDirectory', 'saveFile'],
+		parentWindow = (process.platform == 'darwin') ? null : BrowserWindow.getFocusedWindow();
+
+		dialog.showSaveDialog(parentWindow, {
+			filters: [{
+				name: 'JSON',
+				extensions: ['json']
+			}]
+		}, function(filename) {
+			if (filename === undefined) return;
+			console.log("got a file: " + filename);
+			fs.writeFile(filename, JSON.stringify(data, null, "  "), function (err) {});
+		});
 	});
 	$("#export").tooltip({
 		container: "body"
@@ -114,7 +154,7 @@ jQuery(document).ready(function($) {
 			timer = setTimeout(function() {
 				try {
 					var text = jsonEditor.val();
-					builder.setFormValues(JSON.parse(text))
+					builder.setFormValues(JSON.parse(text));
 				} catch(e) {
 					// ..
 				}
@@ -138,9 +178,13 @@ jQuery(document).ready(function($) {
 	});
 
 	function reset() {
-		$.getJSON("json/resume.json", function(data) {
-			builder.setFormValues(data);
-		});
+		if (typeof currentFile === "string") {
+			$.getJSON(currentFile, function(data) {
+				builder.setFormValues(data);
+			});
+		} else {
+			clear();
+		}
 	}
 
 	function clear() {
